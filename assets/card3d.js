@@ -109,6 +109,12 @@ class Card3D {
     this._raf = requestAnimationFrame(this._loop);
     this._onResize = () => this._resize();
     window.addEventListener('resize', this._onResize);
+    // the container can resize without a window resize (carousel slides settling,
+    // bubbles animating in, fonts loading) — re-fit or the canvas paints stretched
+    if (window.ResizeObserver){
+      this._ro = new ResizeObserver(this._onResize);
+      this._ro.observe(this.container);
+    }
   }
 
   // map every vertex's x,y onto 0..1 UV so the card art lands on the front face
@@ -330,7 +336,7 @@ class Card3D {
   _resize(){
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
-    this.renderer.setSize(w, h);
+    this.renderer.setSize(w, h, false);   // buffer only — CSS keeps the canvas at 100% of the frame
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this._fitCamera(w / h);
@@ -359,6 +365,7 @@ class Card3D {
     window.removeEventListener('deviceorientation', this._onOrient, true);
     if (this._perm) document.removeEventListener('touchstart', this._perm, { once: true });
     window.removeEventListener('resize', this._onResize);
+    if (this._ro) this._ro.disconnect();
     if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas);
     if (this.material){ if (this.material.map) this.material.map.dispose(); this.material.dispose(); }
     if (this.mesh) this.mesh.geometry.dispose();
