@@ -1544,9 +1544,15 @@
     if(sp==="high")spendFrac=(c.feeTier==="none")?0.7:1;
     else if(sp==="low")spendFrac=(c.feeTier==="premium")?0.3:(c.feeTier==="mid"?0.62:1);
     else spendFrac=(c.feeTier==="premium")?0.7:0.9;
-    /* reward format is a hard preference (points vs cash), so it carries the most weight when chosen */
-    var raw=0.28*catFrac+0.16*goalFrac+0.38*rewardFrac+0.08*spendFrac;
+    /* reward format is a hard preference (points vs cash), so it carries the most weight when chosen.
+       Value is the estimated net dollars this card returns per year at THEIR spend, scaled against
+       the best earner in the lineup - so the match %% reflects money, not just stated preferences. */
+    var net=estNetValue(c);
+    var poolBest=0; CARDS.forEach(function(p){ var n=estNetValue(p); if(n>poolBest) poolBest=n; });
+    var valueFrac=net<=0?0:(poolBest>0?net/poolBest:0.5);
+    var raw=0.20*catFrac+0.12*goalFrac+0.30*rewardFrac+0.06*spendFrac+0.22*valueFrac;
     var fit=Math.max(48,Math.min(99,Math.round((0.10+raw)*100)));
+    if(net<0) fit=Math.max(40, 47-Math.round(Math.min(7, -net/60)));   // negative net lives in its own 40-47 band, always below the 48 floor earners can reach
     var why;
     if(rp==="travel"&&isTravel&&(c.cats.travel||0)>=2)why="Earns "+fmtMult(c.cats.travel)+" on travel as points \u2014 the format you picked";
     else if(rp==="cash"&&isCash&&bestExpMult>=3)why="Earns "+fmtMult(bestExpMult)+" cash back on "+CATNAME[bestExpCat];
@@ -1556,6 +1562,7 @@
     else if(rp==="cash"&&isCash)why="Cash back \u2014 the rewards format you picked";
     else if(goalHit)why="Built for "+(GOALWHY[goalHit]||"your goals");
     else why=c.best;
+    if(net<0) why="The $"+c.feeNum+" annual fee outweighs what you\u2019d earn at your spend";
     return {fit:fit,why:why};
   }
   function buildRanked(){ var pool=(state.feePref==="no")?CARDS.filter(function(c){return c.feeNum<=0;}):CARDS; state.ranked=pool.map(function(c){var s=scoreCard(c);return {c:c,fit:s.fit,why:s.why};}).sort(function(a,b){return b.fit-a.fit;}); }
@@ -1962,6 +1969,7 @@
     var sp={low:"under $1k",med:"$1\u20133k",high:"$3k+"}[state.spend]||"";
     var told="what you told us \u2014 <b>"+fmtName+"</b>"+(catStr?" on <b>"+catStr+"</b>":"")+(sp?", about <b>"+sp+" a month</b>":"")+(noFee?", <b>no annual fee</b>":"");
     var head="Scored <b>"+fit+" / 100</b> against "+told+". ";
+    if(estNetValue(c)<0) return head+"At your spend it earns about $"+grossRewards(c).toLocaleString()+" a year, but the $"+c.feeNum+" annual fee costs more than that \u2014 so it ranks below the cards that pay you back.";
     if(pts&&wantsCash) return head+"This card earns travel points, so the reward format is the mismatch \u2014 it covers your categories, just in a currency you didn\u2019t pick.";
     if(!pts&&wantsTravel) return head+"This card earns cash back, so the reward format is the mismatch, even where it covers your categories.";
     var b=catBreakdown(c);
@@ -2017,11 +2025,11 @@
       ledger+='<div class="fled"><span>Get back</span><b class="num-t">'+totPts.toLocaleString()+' pts</b></div>';
       ledger+='<div class="fled"><span>Worth in travel</span><b class="num-t">$'+gross.toLocaleString()+'</b></div>';
       if(fee>0) ledger+='<div class="fled"><span>Annual fee</span><b class="num-t neg">−$'+fee+'</b></div>';
-      ledger+='<div class="fled tot"><span>You keep</span><b class="num-t">$'+net.toLocaleString()+'</b></div>';
+      ledger+='<div class="fled tot"><span>You keep</span><b class="num-t'+(net<0?' neg':'')+'">'+(net<0?('\u2212$'+(-net).toLocaleString()):('$'+net.toLocaleString()))+'</b></div>';
     } else if(fee>0){
       ledger+='<div class="fled"><span>Get back</span><b class="num-t">$'+gross.toLocaleString()+'</b></div>';
       ledger+='<div class="fled"><span>Annual fee</span><b class="num-t neg">−$'+fee+'</b></div>';
-      ledger+='<div class="fled tot"><span>You keep</span><b class="num-t">$'+net.toLocaleString()+'</b></div>';
+      ledger+='<div class="fled tot"><span>You keep</span><b class="num-t'+(net<0?' neg':'')+'">'+(net<0?('\u2212$'+(-net).toLocaleString()):('$'+net.toLocaleString()))+'</b></div>';
     } else {
       var rt=b.flat?(' <span class="rt">'+(pts?fmtMult(b.rows[0].rate):(b.rows[0].rate+"%"))+'</span>'):'';
       ledger+='<div class="fled tot"><span>Get back'+rt+'</span><b class="num-t">$'+gross.toLocaleString()+'</b></div>';
@@ -2029,7 +2037,7 @@
     var foot='From the $'+spendMonthly().toLocaleString()+' a month you told us.'+(pts?' Points valued at $10 per 1,000 in travel.':' Assumes you pay in full.');
     return '<div class="rb" id="'+tid+'">'+
       '<h3 class="rbhead"><button class="rowtrig" type="button" onclick="togRb(\''+tid+'\',this)" aria-expanded="false">'+
-        '<span class="say">Earn up to <span class="amt num-t">$'+net.toLocaleString()+'</span> '+noun+' a year.</span>'+CHEV+
+        '<span class="say">'+(net<0?('The $'+fee+' fee outpaces your rewards by <span class="amt num-t">$'+(-net).toLocaleString()+'</span> a year.'):('Earn up to <span class="amt num-t">$'+net.toLocaleString()+'</span> '+noun+' a year.'))+'</span>'+CHEV+
       '</button></h3>'+
       '<div class="disc"><div class="inner"><div class="pad">'+ledger+'<div class="mfoot">'+foot+'</div></div></div></div>'+
     '</div>';
