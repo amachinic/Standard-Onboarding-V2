@@ -266,7 +266,9 @@ class Card3D {
     const distH = (CARD_H / 2) / Math.tan(vFov / 2);
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
     const distW = (CARD_W / 2) / Math.tan(hFov / 2);
-    this.camera.position.set(0, 0, Math.max(distH, distW) * 1.06);
+    // FLUSH fit: the front face exactly fills the frame, matching the full-bleed
+    // card stills — so still <-> live swaps (carousel focus) don't change the size.
+    this.camera.position.set(0, 0, Math.max(distH, distW) + CARD_T / 2);
     this.camera.lookAt(0, 0, 0);
   }
 
