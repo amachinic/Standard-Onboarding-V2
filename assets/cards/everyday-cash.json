@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "config": {
+    "colorA": "#0E0E10",
+    "colorB": "#1C1C20",
+    "pattern": "none",
+    "texture": "none",
+    "finish": "metal",
+    "network": "visa",
+    "networkColor": "#ffffff",
+    "chip": "graphite",
+    "chipColor": null,
+    "contactless": false,
+    "brand": "Maison",
+    "name": "Your Name",
+    "number": "4274 5436 2314 4237",
+    "expiry": "12/28",
+    "textColor": "#E9ECF1",
+    "textColors": {
+      "brand": "#E9ECF1",
+      "number": "#E9ECF1",
+      "name": "#E9ECF1",
+      "expiry": "#E9ECF1",
+      "label": "#E9ECF1"
+    },
+    "material": {
+      "metalness": 0.9,
+      "roughness": 0.33,
+      "clearcoat": 0.6,
+      "iridescence": 0
+    },
+    "emboss": 0.35,
+    "labelGap": 1,
+    "albedo": "assets/cards/card-4.png"
+  },
+  "studio": {
+    "lighting": { "key": 1.25, "fill": 0, "rim": 0 },
+    "keyDir": { "x": 0.1, "y": 0.04 },
+    "background": "#0A0A0A",
+    "scene": "single",
+    "facing": "front"
+  }
+}
