@@ -1928,6 +1928,26 @@
                rate:rate, pts:Math.round(perCat*rate*12), usd:Math.round(perCat*(rate/100)*12) };
     })};
   }
+  /* Rate-cell display lines: ONLY the categories this card boosts above its base rate,
+     equal rates consolidated onto one line, best first (top two tiers). Base-rate filler
+     (1x groceries etc.) never shows; a true flat-rate card just says "On everything". */
+  function rateLines(c){
+    var pts=disp(c).points;
+    var base=(c.cats&&c.cats.everything!=null)?c.cats.everything:1;
+    var fmt=function(r){return pts?fmtMult(r):(r+"%");};
+    var byRate={}, any=false;
+    Object.keys(c.cats||{}).forEach(function(k){
+      if(k==="everything"||c.cats[k]==null||c.cats[k]<=base) return;
+      (byRate[c.cats[k]]=byRate[c.cats[k]]||[]).push(k); any=true;
+    });
+    if(!any) return ["On everything"];
+    var picked=state.rwd||new Set();
+    return Object.keys(byRate).map(Number).sort(function(a,b2){return b2-a;}).slice(0,2)
+      .map(function(rt){
+        var ks=byRate[rt].slice().sort(function(x,y){return (picked.has(y)?1:0)-(picked.has(x)?1:0);}).slice(0,2);
+        return fmt(rt)+" "+ks.map(function(k){return CATNAME[k]||k;}).join(" & ");
+      });
+  }
   function cardScorecap(c){
     var b=catBreakdown(c);
     if(b.flat){ var r=b.rows[0].rate; return b.points?(fmtMult(r)+" on everything"):(r+"% on everything"); }
@@ -2042,7 +2062,7 @@
      stashed on the card and surfaces inside "Additional details". */
   function statStrip(c){
     var d=disp(c), pts=d.points, b=catBreakdown(c);
-    var rateSub=b.flat?"On everything":b.rows.map(function(r){return (pts?fmtMult(r.rate):(r.rate+"%"))+" "+r.name;}).join("<br>");
+    var rateSub=rateLines(c).join("<br>");
     var feeHead=c.feeNum>0?("$"+c.feeNum):"$0", feeSub=c.feeNum>0?"Per year":"No annual fee";
     var apr=aprShort((DISC[c.id]||DISC.household).purchase);
     var aprV, aprS;
@@ -2273,7 +2293,7 @@
       {k:"Match",v:function(c){return findRanked(c.id).fit+"%";},num:function(c){return findRanked(c.id).fit;},best:"max"},
       {k:"Earn / yr",v:function(c){var nv=grossRewards(c)-c.feeNum;return nv>0?"$"+nv.toLocaleString():"\u2014";},num:function(c){return grossRewards(c)-c.feeNum;},best:"max"},
       {k:"Welcome",v:function(c){return disp(c).welHead;},num:bonusValue,best:"max"},
-      {kf:function(c){return disp(c).points?"Rewards":"Cash back";},v:function(c){var d=disp(c),b=catBreakdown(c);var sub=b.flat?"On everything":b.rows.map(function(r){return (d.points?fmtMult(r.rate):(r.rate+"%"))+" "+r.name;}).join("<br>");return cap(d.earnHead)+'<div class="vsub">'+cap(sub)+'</div>';}},
+      {kf:function(c){return disp(c).points?"Rewards":"Cash back";},v:function(c){var d=disp(c),b=catBreakdown(c);var sub=rateLines(c).join("<br>");return cap(d.earnHead)+'<div class="vsub">'+cap(sub)+'</div>';}},
       {k:"Annual fee",v:function(c){return c.fee;},num:function(c){return c.feeNum;},best:"min"},
       {k:"Foreign fee",v:function(c){var x=(c.fx||"").trim();return /no fx|none/i.test(x)?"None":((x.match(/[0-9]+%/)||["—"])[0]);},num:function(c){return /no fx/i.test(c.fx)?0:1;},best:"min"},
       {k:"Purchase APR",v:function(c){var apr=aprShort((DISC[c.id]||DISC.household).purchase);return c.introApr>0?("0% for "+c.introApr+" mo"+'<div class="vsub">then '+apr+' variable</div>'):(apr+'<div class="vsub">If you carry a balance</div>');}},
@@ -3490,7 +3510,7 @@
   function detailStats(c){
     var d=disp(c), pts=d.points, b=catBreakdown(c);
     var rateLabel=pts?"Rewards":"Cash back";
-    var rateSub=b.flat?"On everything":b.rows.map(function(r){return (pts?fmtMult(r.rate):(r.rate+"%"))+" "+r.name;}).join("<br>");
+    var rateSub=rateLines(c).join("<br>");
     var feeHead=c.feeNum>0?("$"+c.feeNum):"$0", feeSub=c.feeNum>0?"Per year":"No annual fee";
     var apr=aprShort((DISC[c.id]||DISC.household).purchase);
     var aprV=c.introApr>0?("0% for "+c.introApr+" mo"):apr, aprS=c.introApr>0?('then '+apr+' variable'):"If you carry a balance";
