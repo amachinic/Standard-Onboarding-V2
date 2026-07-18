@@ -220,33 +220,16 @@ class Card3D {
     // chip
     this._drawChip(ctx, W, H);
     // ----- text -----
-    const M = 0.072 * W;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    // The face carries only THREE elements: the chip (drawn above), the Maison wordmark, and the
+    // VISA logo. The card number, cardholder name and expiry are intentionally not drawn.
+    ctx.textBaseline = 'alphabetic';
     const ls = (px) => { if ('letterSpacing' in ctx) { try { ctx.letterSpacing = px + 'px'; } catch (e) {} } };
-    // brand wordmark (serif, like the Maison logo)
+    // brand wordmark (serif, like the Maison logo) — RIGHT-aligned to the VISA logo's right edge (0.945W)
+    ctx.textAlign = 'right';
     ctx.globalAlpha = 0.97; ctx.fillStyle = tcol('brand');
     ctx.font = '500 ' + (0.094*H) + 'px Georgia,"Times New Roman",serif';
-    ls(0); ctx.fillText(c.brand || 'Maison', M, 0.176*H);
-    // number
-    ctx.globalAlpha = 0.9; ctx.fillStyle = tcol('number');
-    const numFs = 0.084*H; ctx.font = '500 ' + numFs + 'px "Instrument Sans",system-ui,sans-serif';
-    ls(numFs*0.05); ctx.fillText(c.number || '4274 5436 2314 4237', M, 0.595*H); ls(0);
-    // labels + values
-    const name = ((this.cfg && this.cfg.name) ? this.cfg.name : (c.name || 'Your Name')).toString().toUpperCase().slice(0, 24);
-    const label = (x, t) => {
-      ctx.globalAlpha = 0.6; ctx.fillStyle = tcol('label');
-      const lfs = 0.037*H; ctx.font = '700 ' + lfs + 'px "Instrument Sans",system-ui,sans-serif';
-      ls(lfs*0.12); ctx.fillText(t, x, 0.79*H); ls(0);
-    };
-    const value = (x, t, col, maxW) => {
-      ctx.globalAlpha = 0.94; ctx.fillStyle = col;
-      let vfs = 0.063*H; const setv = () => { ctx.font = '500 ' + vfs + 'px "Instrument Sans",system-ui,sans-serif'; };
-      setv(); ls(vfs*0.03);
-      if (maxW) { while (ctx.measureText(t).width > maxW && vfs > 7){ vfs -= 1; setv(); } }
-      ctx.fillText(t, x, 0.885*H); ls(0);
-    };
-    label(M, 'CARDHOLDER'); value(M, name, tcol('name'), 0.36*W);
-    label(0.47*W, 'VALID THRU'); value(0.47*W, (c.expiry || '12/28'), tcol('expiry'), 0.17*W);
+    ls(0); ctx.fillText(c.brand || 'Maison', 0.945*W, 0.176*H);
+    ctx.textAlign = 'left';
     // network wordmark — the real VISA logo (SVG path), drawn bottom-right as a Path2D
     if ((c.network||'visa').toLowerCase() === 'visa') {
       const vd = 'M15.854 11.329l-2.003 9.367h-2.424l2.006-9.367zM26.051 17.377l1.275-3.518 0.735 3.518zM28.754 20.696h2.242l-1.956-9.367h-2.069c-0.003-0-0.007-0-0.010-0-0.459 0-0.853 0.281-1.019 0.68l-0.003 0.007-3.635 8.68h2.544l0.506-1.4h3.109zM22.429 17.638c0.010-2.473-3.419-2.609-3.395-3.714 0.008-0.336 0.327-0.694 1.027-0.785 0.13-0.013 0.28-0.021 0.432-0.021 0.711 0 1.385 0.162 1.985 0.452l-0.027-0.012 0.425-1.987c-0.673-0.261-1.452-0.413-2.266-0.416h-0.001c-2.396 0-4.081 1.275-4.096 3.098-0.015 1.348 1.203 2.099 2.122 2.549 0.945 0.459 1.262 0.754 1.257 1.163-0.006 0.63-0.752 0.906-1.45 0.917-0.032 0.001-0.071 0.001-0.109 0.001-0.871 0-1.691-0.219-2.407-0.606l0.027 0.013-0.439 2.052c0.786 0.315 1.697 0.497 2.651 0.497 0.015 0 0.030-0 0.045-0h-0.002c2.546 0 4.211-1.257 4.22-3.204zM12.391 11.329l-3.926 9.367h-2.562l-1.932-7.477c-0.037-0.364-0.26-0.668-0.57-0.82l-0.006-0.003c-0.688-0.338-1.488-0.613-2.325-0.786l-0.066-0.011 0.058-0.271h4.124c0 0 0.001 0 0.001 0 0.562 0 1.028 0.411 1.115 0.948l0.001 0.006 1.021 5.421 2.522-6.376z';
