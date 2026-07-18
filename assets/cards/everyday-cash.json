@@ -3,7 +3,7 @@
   "config": {
     "colorA": "#0E0E10",
     "colorB": "#1C1C20",
-    "pattern": "none",
+    "pattern": "hex",
     "texture": "none",
     "finish": "metal",
     "network": "visa",

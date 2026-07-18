@@ -183,6 +183,15 @@ class Card3D {
     }
     ctx.restore();
   }
+  // fine engraved grid, sized to sit as quietly as the hex pattern
+  _drawGridPattern(ctx, W, H, color){
+    const step = W*0.042;
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, W*0.0011);
+    ctx.beginPath();
+    for (let x = step; x < W; x += step){ ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = step; y < H; y += step){ ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke(); ctx.restore();
+  }
   _drawChip(ctx, W, H){
     const c = this.c || {};
     const x = 0.072*W, y = 0.30*H, w = 0.135*W, h = 0.165*H, r = h*0.18;
@@ -227,7 +236,10 @@ class Card3D {
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
     // Shimmer Sweep disabled — no diagonal light band painted on the card face.
     // pattern
-    if ((c.pattern||'').toLowerCase() === 'hex') this._drawHexPattern(ctx, W, H, dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.07)');
+    const pat = (c.pattern||'').toLowerCase();
+    const patCol = dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.07)';
+    if (pat === 'hex') this._drawHexPattern(ctx, W, H, patCol);
+    else if (pat === 'grid') this._drawGridPattern(ctx, W, H, patCol);
     // chip
     this._drawChip(ctx, W, H);
     // ----- text -----
