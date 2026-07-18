@@ -1551,6 +1551,18 @@
     var poolBest=0; CARDS.forEach(function(p){ var n=estNetValue(p); if(n>poolBest) poolBest=n; });
     var valueFrac=net<=0?0:(poolBest>0?net/poolBest:0.5);
     var raw=0.20*catFrac+0.12*goalFrac+0.30*rewardFrac+0.06*spendFrac+0.22*valueFrac;
+    /* Light pay-behaviour tilt. Only people who CARRY a balance pay interest, so only they are
+       nudged toward cards that cost less to carry (a 0% intro period, a lower ongoing APR).
+       Transactors never touch interest -> untouched, ranking stays purely value-driven. Kept
+       small (max ~+/-4 fit pts) so the save/earn value prop always dominates. */
+    var _carry = state.payPref==="carry" ? 1 : (state.payPref==="varies" ? 0.5 : 0);
+    if(_carry){
+      var _intro = Math.min(1, (c.introApr||0)/15);                                            // 15-mo 0% intro = full credit
+      var _aprLo = parseFloat((((DISC[c.id]||DISC.household).purchase||"").match(/(\d+(?:\.\d+)?)%/)||["","24"])[1]);
+      var _aprScore = Math.max(0, Math.min(1, (29 - _aprLo) / 12));                             // ~17% APR -> 1, 29% -> 0
+      var _carryFit = 0.6*_intro + 0.4*_aprScore;                                               // 0..1, higher = cheaper to carry
+      raw += _carry * 0.08 * (_carryFit - 0.5);                                                 // +/-0.04 at full carry -> +/-4 fit pts
+    }
     var fit=Math.max(48,Math.min(99,Math.round((0.10+raw)*100)));
     if(net<0) fit=Math.max(40, 47-Math.round(Math.min(7, -net/60)));   // negative net lives in its own 40-47 band, always below the 48 floor earners can reach
     var why;
@@ -1967,7 +1979,7 @@
     var cats=Array.from(state.rwd).filter(function(k){return k!=="everything";});
     var catStr=state.rwd.has("everything")?"everyday spending":(cats.length?cats.map(function(k){return (CATNAME[k]||k).toLowerCase();}).join(" and "):"");
     var sp={low:"under $1k",med:"$1\u20133k",high:"$3k+"}[state.spend]||"";
-    var told="what you told us \u2014 <b>"+fmtName+"</b>"+(catStr?" on <b>"+catStr+"</b>":"")+(sp?", about <b>"+sp+" a month</b>":"")+(noFee?", <b>no annual fee</b>":"");
+    var told="what you told us \u2014 <b>"+fmtName+"</b>"+(catStr?" on <b>"+catStr+"</b>":"")+(sp?", about <b>"+sp+" a month</b>":"")+(noFee?", <b>no annual fee</b>":"")+((state.payPref==="carry"||state.payPref==="varies")?", and that you <b>sometimes carry a balance</b>":"");
     var head="Scored <b>"+fit+" / 100</b> against "+told+". ";
     if(estNetValue(c)<0) return head+"At your spend it earns about $"+grossRewards(c).toLocaleString()+" a year, but the $"+c.feeNum+" annual fee costs more than that \u2014 so it ranks below the cards that pay you back.";
     if(pts&&wantsCash) return head+"This card earns travel points, so the reward format is the mismatch \u2014 it covers your categories, just in a currency you didn\u2019t pick.";
