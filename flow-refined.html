@@ -2154,7 +2154,13 @@
       items.push(t);
     });
     /* stats that didn't make the personalized top-3 strip surface here first */
-    var extras=(c._extraStats||[]).map(function(s){var sub=s.sub?' '+(s.sub.charAt(0).toLowerCase()+s.sub.slice(1)).replace(/(\d[\d,.]*(?:\s?[–-]\s?\d[\d,.]*)?%?)/g,'<b>$1</b>'):'';return '<li><span class="xk">'+(s.rk||s.k)+'</span> <b>'+s.v.replace(/(\d) mo\b/,'$1 months')+'</b>'+sub+'</li>';});
+    var _exCells=(c._extraStats||[]);
+    if(!collapsible) _exCells=_exCells.filter(function(s){return s.k!=="APR";});   // final card: a dedicated Standard APR row replaces the strip's APR cell
+    var extras=_exCells.map(function(s){var sub=s.sub?' '+(s.sub.charAt(0).toLowerCase()+s.sub.slice(1)).replace(/(\d[\d,.]*(?:\s?[–-]\s?\d[\d,.]*)?%?)/g,'<b>$1</b>'):'';return '<li><span class="xk">'+(s.rk||s.k)+'</span> <b>'+s.v.replace(/(\d) mo\b/,'$1 months')+'</b>'+sub+'</li>';});
+    if(!collapsible){   // FINAL product card only: always end on an explained Standard APR row
+      var _apr=aprShort((DISC[c.id]||DISC.household).purchase);
+      extras.push('<li><span class="xk">Standard APR</span> <b>'+_apr+' variable</b> — the interest charged on any balance you don’t pay off by the due date. Your exact rate lands somewhere in this range based on your credit when you’re approved, and “variable” means it can rise or fall with the market.</li>');
+    }
     if(!items.length&&!extras.length) return "";                         // nothing new — suppress the component
     var list='<ul class="perks">'+extras.join("")+(items.length?'<li><span class="xk">Benefits</span>'+items.map(cap).join('<br>')+'</li>':'')+'</ul>';
     if(!collapsible) return '<div class="xtras">'+list+'</div>';
