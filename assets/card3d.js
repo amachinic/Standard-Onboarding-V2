@@ -185,22 +185,33 @@ class Card3D {
   }
   _drawChip(ctx, W, H){
     const c = this.c || {};
-    const x = 0.072*W, y = 0.30*H, w = 0.135*W, h = 0.165*H, r = h*0.16;
+    const x = 0.072*W, y = 0.30*H, w = 0.135*W, h = 0.165*H, r = h*0.18;
     const gold = (c.chip||'').toLowerCase() === 'gold';
     const g = ctx.createLinearGradient(x, y, x+w, y+h);
     if (gold){ g.addColorStop(0,'#f6e9b8'); g.addColorStop(0.5,'#d8b558'); g.addColorStop(1,'#b08a36'); }
     else { g.addColorStop(0,'#eceef1'); g.addColorStop(0.5,'#c5c9cf'); g.addColorStop(1,'#9ba1a9'); }
-    const line = 'rgba(70,62,48,0.42)', lw = Math.max(1, W*0.0013);
-    ctx.save(); this._roundRect(ctx, x, y, w, h, r); ctx.fillStyle = g; ctx.fill(); ctx.clip();
-    ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.beginPath();
-    ctx.moveTo(x, y+h*0.34); ctx.lineTo(x+w, y+h*0.34);
-    ctx.moveTo(x, y+h*0.66); ctx.lineTo(x+w, y+h*0.66);
-    ctx.moveTo(x+w*0.32, y); ctx.lineTo(x+w*0.32, y+h);
-    ctx.moveTo(x+w*0.68, y); ctx.lineTo(x+w*0.68, y+h);
-    ctx.stroke(); ctx.restore();
-    const cw = w*0.38, ch = h*0.40, cx = x+(w-cw)/2, cyy = y+(h-ch)/2;
-    ctx.save(); this._roundRect(ctx, cx, cyy, cw, ch, ch*0.22); ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.stroke(); ctx.restore();
+    const line = gold ? 'rgba(74,58,22,0.40)' : 'rgba(44,48,56,0.34)';
+    const lw = Math.max(1, w*0.028);
+    // Contact pattern maps the app's canonical chip SVG (viewBox 71.42 x 60.76) onto the chip rect,
+    // so the rendered card matches the chip used everywhere else in the product (chipMarkup).
+    const VW = 71.42, VH = 60.76, px = (v)=> x + (v/VW)*w, py = (v)=> y + (v/VH)*h;
+    ctx.save();
+    this._roundRect(ctx, x, y, w, h, r); ctx.fillStyle = g; ctx.fill(); ctx.clip();
+    ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(px(35.71), py(0.6));   ctx.lineTo(px(35.71), py(20.9));                                  // top centre stem
+    ctx.moveTo(px(35.71), py(39.12)); ctx.lineTo(px(35.71), py(60.16));                                 // bottom centre stem
+    ctx.moveTo(px(0.6),   py(17.04)); ctx.lineTo(px(22.0), py(17.04)); ctx.lineTo(px(27.0), py(21.5));   // top-left arm
+    ctx.moveTo(px(0.6),   py(43.66)); ctx.lineTo(px(22.0), py(43.66)); ctx.lineTo(px(27.0), py(39.2));   // bottom-left arm
+    ctx.moveTo(px(0.6),   py(30.38)); ctx.lineTo(px(26.5), py(30.38));                                   // left middle
+    ctx.moveTo(px(70.82), py(17.04)); ctx.lineTo(px(49.4), py(17.04)); ctx.lineTo(px(44.4), py(21.5));   // top-right arm
+    ctx.moveTo(px(70.82), py(43.66)); ctx.lineTo(px(49.4), py(43.66)); ctx.lineTo(px(44.4), py(39.2));   // bottom-right arm
+    ctx.moveTo(px(70.82), py(30.38)); ctx.lineTo(px(44.92), py(30.38));                                  // right middle
+    ctx.stroke();
+    // central contact pad, drawn on top so the arm ends tuck under it
+    this._roundRect(ctx, px(26.5), py(21.24), (18.42/VW)*w, (18.22/VH)*h, Math.max(1, w*0.012));
+    ctx.fillStyle = g; ctx.fill(); ctx.stroke();
+    ctx.restore();
   }
   _renderCard(ctx, W, H){
     const c = this.c || {};
