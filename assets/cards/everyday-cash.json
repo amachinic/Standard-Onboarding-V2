@@ -1,8 +1,8 @@
 {
   "version": 1,
   "config": {
-    "colorA": "#26262B",
-    "colorB": "#37373E",
+    "colorA": "#1B1B1F",
+    "colorB": "#2A2A30",
     "pattern": "hex",
     "texture": "none",
     "finish": "metal",

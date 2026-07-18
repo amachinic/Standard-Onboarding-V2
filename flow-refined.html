@@ -1065,7 +1065,7 @@
   /* end-of-search morph: card -> circle, chip fades, checkmark pops in */
   .findspin{display:flex;align-items:center;justify-content:center}
   .findmini{position:relative;transition:width .45s cubic-bezier(.55,.06,.28,1),height .45s cubic-bezier(.55,.06,.28,1),border-radius .45s ease}
-  .findmini .ci-chip{transition:opacity .28s ease}
+  .findmini .ci-chip{width:20%;transition:opacity .28s ease}   /* slightly smaller chip in the matching animation */
   .findmini .fck{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.55);transition:opacity .3s ease .22s,transform .34s cubic-bezier(.34,1.4,.64,1) .22s}
   .findmini .fck svg{width:56%;height:56%}
   .findspin.findone{animation:none}
