@@ -237,7 +237,8 @@ class Card3D {
     // Shimmer Sweep disabled — no diagonal light band painted on the card face.
     // pattern
     const pat = (c.pattern||'').toLowerCase();
-    const patCol = dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.07)';
+    // white hex/grid — bumped so it reads on the very dark cards (Everyday's near-black) too
+    const patCol = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.09)';
     if (pat === 'hex') this._drawHexPattern(ctx, W, H, patCol);
     else if (pat === 'grid') this._drawGridPattern(ctx, W, H, patCol);
     // chip
